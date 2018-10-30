@@ -1,25 +1,23 @@
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
+#include <credentials.h>
 
-#define panelGPIO 4
+#define panel1GPIO 4
 #define whiteGPIO 16
 #define redGPIO 5
 #define greenGPIO 2
 #define blueGPIO 12
+#define panel2GPIO 15
 
 int brightness = 0;
 bool standard = true;
-
-// WiFi Settings
-const char *ssid =  "San_Francisco_2,4-GHz";
-const char *pass =  "unskilled bobs flattened awkward zucchini";
 
 // Start WiFi Server
 WiFiServer server(80);
 
 void setup()
 {
-  pinMode(panelGPIO, OUTPUT);
+  pinMode(panel1GPIO, OUTPUT);
+  pinMode(panel2GPIO, OUTPUT);
   pinMode(whiteGPIO, OUTPUT);
   pinMode(redGPIO, OUTPUT);
   pinMode(blueGPIO, OUTPUT);
@@ -48,20 +46,6 @@ void setup()
   
   server.begin();
   Serial.println("Webserver started");
-  delay(500);
-     HTTPClient http;  //Declare an object of class HTTPClient
- 
-    http.begin("http://192.168.178.63/cm?cmnd=Power%20On");  //Specify request destination
-    int httpCode = http.GET();                                                                  //Send the request
- 
-    if (httpCode > 0) { //Check the returning code
- 
-      String payload = http.getString();   //Get the request response payload
-      Serial.println(payload);                     //Print the response payload
- 
-    }
- 
-    http.end();   //Close connection
  
 }
 
@@ -87,25 +71,34 @@ void loop()
       s += "Content-Type: text/html\r\n\r\n";
       s += "<!DOCTYPE HTML>\r\n<html>\r\n";
       
-      if((req.indexOf("/led/") != -1)) {
+      if((req.indexOf("/panel1/") != -1)) {
         int pos = req.length();
-        int ind1 = req.indexOf("/led/") + 5;
+       int ind1 = req.indexOf("/panel1/") + 8;
         String teststring = req.substring(ind1, pos);
         int ind2 = teststring.indexOf('/');
         int ledValue = req.substring(ind1, ind2+ind1).toInt();
-        
+
         if(ledValue>0){
-          digitalWrite(panelGPIO, HIGH);
-        }
+         digitalWrite(panel1GPIO, HIGH);        
+         }       
         else {
-          digitalWrite(panelGPIO, LOW);
+          digitalWrite(panel1GPIO, LOW);
         }
-        
-        // confirm to client
-        s += "LED value changed to ";
-        s += ledValue;
-      
       }
+          if((req.indexOf("/panel2/") != -1)) {
+        int pos = req.length();
+       int ind1 = req.indexOf("/panel2/") + 8;
+        String teststring = req.substring(ind1, pos);
+        int ind2 = teststring.indexOf('/');
+        int ledValue = req.substring(ind1, ind2+ind1).toInt();
+
+        if(ledValue>0){
+         digitalWrite(panel2GPIO, HIGH);        
+         }       
+        else {
+          digitalWrite(panel2GPIO, LOW);
+        }
+          }
       if((req.indexOf("/white/") != -1))
       {
         int ledValue = getLedValue("/white/", req);
